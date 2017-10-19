@@ -1,0 +1,24 @@
+{% if list_of_submissions %}
+  <table style="width:60%">
+  <tr><th></th> <th></th></tr>
+    {% for submission in list_of_submissions %}
+      <tr>
+        <td> {{ submission.display_name }} </td>
+        <td> {{ submission.pos_id }} </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% else %}
+    <p> No things found! </p>
+{% endif %}
+
+<form action="" method="POST">
+  {% csrf_token %}
+  <input list="champions" name="champion">
+  <datalist id="champions">
+    {% for champion in champions %}
+      <option value={{champion.display_name}}>
+    {% endfor %}
+  </datalist>
+  <input type="submit" value="Submit">
+</form>
