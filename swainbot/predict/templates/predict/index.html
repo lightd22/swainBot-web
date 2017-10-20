@@ -3,6 +3,13 @@
 <head>
 	<title>Swain Bot</title>
 	<style>
+	body {
+		background-color: dimgray;
+		font-family: "Verdana", sans-serif;
+	}
+	label {
+		color: #eeeeee;
+	}
 	.red {
 		background-color: tomato;
 	}
@@ -10,26 +17,47 @@
 		background-color: royalblue;
 	}
 	.left-half {
-		width: 48%;
+		width: 47%;
 		float: left;
+		margin: 1em;
 	}
 	.right-half {
-		width: 48%;
+		width: 47%;
 		float: right;
+		margin: 1em;
 	}
-  .phase-break {
-    margin-bottom: 1cm;
-  }
-  .pos-field{
-    width: 2em;
-  }
-	select {
-		width: 20%;
-		padding: 16px 20px;
+	.phase-break {
+		margin-bottom: 3em;
+	}
+	.pos-field {
+		width: 2em;
+	}
+	.predict-button {
+		margin-left: 3em;
+		margin-top: 1.5em;
+		text-align: center;
+		text-decoration: none;
+		padding: .75em .5em;
 		border: none;
-		border-radius: 4px;
+		background-color: whitesmoke;
+		color: #555555;
+		font-size: 1.25em;
+	}
+	.predict-button:hover {
+		box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+	}
+	select {
+		width: 30%;
+		padding: .75em .5em;
+		border: none;
 		background-color: #f1f1f1;
-		text-color: #CCCCCC;
+		color: #eeeeee;
+	}
+	select:hover {
+		box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+	}
+	select option {
+		background-color: dimgray;
 	}
 </style>
 <body onload="">
@@ -118,7 +146,7 @@
 			{{draft_form.red_pick_4}} {{draft_form.red_pos_4}}
 		</p>
   </div>
-	<input type="submit" value="THE EARLY BIRD GUTS THE WORM" form="draft_form">
+  <input type="submit" class="predict-button" value="THE EARLY BIRD GUTS THE WORM" form="draft_form">
 </form>
 </body>
 </html>
