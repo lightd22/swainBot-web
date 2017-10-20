@@ -1,24 +1,124 @@
-{% if list_of_submissions %}
-  <table style="width:60%">
-  <tr><th></th> <th></th></tr>
-    {% for submission in list_of_submissions %}
-      <tr>
-        <td> {{ submission.display_name }} </td>
-        <td> {{ submission.pos_id }} </td>
-      </tr>
-    {% endfor %}
-  </table>
-{% else %}
-    <p> No things found! </p>
-{% endif %}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Swain Bot</title>
+	<style>
+	.red {
+		background-color: tomato;
+	}
+	.blue {
+		background-color: royalblue;
+	}
+	.left-half {
+		width: 48%;
+		float: left;
+	}
+	.right-half {
+		width: 48%;
+		float: right;
+	}
+  .phase-break {
+    margin-bottom: 1cm;
+  }
+  .pos-field{
+    width: 2em;
+  }
+	select {
+		width: 20%;
+		padding: 16px 20px;
+		border: none;
+		border-radius: 4px;
+		background-color: #f1f1f1;
+		text-color: #CCCCCC;
+	}
+</style>
+<body onload="">
 
-<form action="" method="POST">
+<datalist id="champions">
+  <option value="">
+  {% for champion in champions %}
+    <option value="{{ champion.display_name }}">
+  {% endfor %}
+</datalist>
+
+<form action="{% url 'predict:predict' %}" method="POST" id="draft_form">
   {% csrf_token %}
-  <input list="champions" name="champion">
-  <datalist id="champions">
-    {% for champion in champions %}
-      <option value={{champion.display_name}}>
-    {% endfor %}
-  </datalist>
-  <input type="submit" value="Submit">
+  <div class="left-half">
+		<label for="id_blue_ban_0"> Ban 0 </label>
+		{{draft_form.blue_ban_0}}
+		<p>
+			<label for="id_blue_ban_1"> Ban 1 </label>
+			{{draft_form.blue_ban_1}}
+		</p>
+		<p class="phase-break">
+			<label for="id_blue_ban_2"> Ban 2 </label>
+			{{draft_form.blue_ban_2}}
+		</p>
+
+		<label for="id_blue_pick_0"> Pick 0 </label>
+		{{draft_form.blue_pick_0}} {{draft_form.blue_pos_0}}
+		<p>
+			<label for="id_blue_pick_1"> Pick 1 </label>
+			{{draft_form.blue_pick_1}} {{draft_form.blue_pos_1}}
+		</p>
+		<p class="phase-break">
+			<label for="id_blue_pick_2"> Pick 2 </label>
+			{{draft_form.blue_pick_2}} {{draft_form.blue_pos_2}}
+		</p>
+
+		<label for="id_blue_ban_3"> Ban 3 </label>
+		{{draft_form.blue_ban_3}}
+		<p class="phase-break">
+			<label for="id_blue_ban_4"> Ban 4 </label>
+			{{draft_form.blue_ban_4}}
+		</p>
+
+		<label for="id_blue_pick_3"> Pick 3 </label>
+		{{draft_form.blue_pick_3}} {{draft_form.blue_pos_3}}
+		<p>
+			<label for="id_blue_pick_4"> Pick 4 </label>
+			{{draft_form.blue_pick_4}} {{draft_form.blue_pos_4}}
+		</p>
+  </div>
+
+	<div class="right-half">
+		<label for="id_red_ban_0"> Ban 0 </label>
+		{{draft_form.red_ban_0}}
+		<p>
+			<label for="id_red_ban_1"> Ban 1 </label>
+			{{draft_form.red_ban_1}}
+		</p>
+		<p class="phase-break">
+			<label for="id_red_ban_2"> Ban 2 </label>
+			{{draft_form.red_ban_2}}
+		</p>
+
+		<label for="id_red_pick_0"> Pick 0 </label>
+		{{draft_form.red_pick_0}} {{draft_form.red_pos_0}}
+		<p>
+			<label for="id_red_pick_1"> Pick 1 </label>
+			{{draft_form.red_pick_1}} {{draft_form.red_pos_1}}
+		</p>
+		<p class="phase-break">
+			<label for="id_red_pick_2"> Pick 2 </label>
+			{{draft_form.red_pick_2}} {{draft_form.red_pos_2}}
+		</p>
+
+		<label for="id_red_ban_3"> Ban 3 </label>
+		{{draft_form.red_ban_3}}
+		<p class="phase-break">
+			<label for="id_red_ban_4"> Ban 4 </label>
+			{{draft_form.red_ban_4}}
+		</p>
+
+		<label for="id_red_pick_3"> Pick 3 </label>
+		{{draft_form.red_pick_3}} {{draft_form.red_pos_3}}
+		<p>
+			<label for="id_red_pick_4"> Pick 4 </label>
+			{{draft_form.red_pick_4}} {{draft_form.red_pos_4}}
+		</p>
+  </div>
+	<input type="submit" value="THE EARLY BIRD GUTS THE WORM" form="draft_form">
 </form>
+</body>
+</html>

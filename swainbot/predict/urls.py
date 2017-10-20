@@ -3,5 +3,5 @@ from . import views
 
 app_name = 'predict'
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
+    url(r'^$', views.predict, name='predict'),
 ]
