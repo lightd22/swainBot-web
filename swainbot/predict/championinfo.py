@@ -157,12 +157,13 @@ def populateChampionDictionary():
         True if succesful, False otherwise
     Populates the module dictionary whose keys are champion Ids and values are strings of the corresponding champion's name.
     """
+
     #riotapi.set_region("NA")
     #riotapi.set_api_key(api_key)
     #champions = riotapi.get_champions()
     DISABLED_CHAMPIONS = ["Ornn"]
     if(look_local):
-        with open(os.path.dirname(os.path.abspath(__file__))+'/champions.json') as local_data:
+        with open(os.path.dirname(os.path.abspath(__file__))+'/champions.json', encoding='utf-8') as local_data:
             response = json.load(local_data)
     else:
         request = "{static}/{version}/champions".format(static="static-data",version=api_versions["staticdata"])
