@@ -4,7 +4,6 @@ from .riotapi import make_request, api_versions
 import requests
 import re
 import json
-from .myRiotApiKey import api_key
 import os
 
 # Box is a vacant class with no initial members. This will be used to hold the champion_id list and champion_id <-> name dictionaries.
