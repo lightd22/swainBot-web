@@ -1,11 +1,14 @@
 from django.shortcuts import render
 from django.core.exceptions import ValidationError
+import os
+import numpy as np
+import pandas as pd
 
 from .models import Champion, Position
 from .forms import DraftForm
 from . import ann_model
 from .draftstate import DraftState, get_active_team
-from .championinfo import getChampionIds
+from .championinfo import getChampionIds, championNameFromId
 # Create your views here.
 
 def validate_draft(form):
@@ -60,33 +63,36 @@ def validate_draft(form):
 
     return {"errors":errors, "states":states, "draft":draft}
 
-def feed_swainbot(states):
-    patch_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
-    swain = ann_model.Model(path_to_model)
-    predictions = swain.predict(states)
-    return predictions
-
 def predict(request):
-    default_vals = ['','','','','']
+
     if(request.method == 'POST'):
         form = DraftForm(request.POST)
-        blue_ban_1 = request.POST["blue_ban_1"]
         if(form.is_valid()):
-#            print("blue ban 0= {}".format(form.cleaned_data['blue_ban_0']))
-#            print(form.cleaned_data.keys())
             result = validate_draft(form)
             errors = result["errors"]
             states = result["states"]
             for key in errors:
                 print("{} -> {}".format(key,errors[key]))
             if states:
-                states["blue"].displayState()
+                path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
+                swain = ann_model.Model(path_to_model)
+                state = states["blue"]
+                predictions = swain.predict([state])
+                predictions = predictions[0,:]
+                data = [(a,*state.formatAction(a),predictions[a]) for a in range(len(predictions))]
+                data = [(a,championNameFromId(cid),pos,Q) for (a,cid,pos,Q) in data]
+                df = pd.DataFrame(data, columns=['act_id','cname','pos','Q(s,a)'])
+                df.sort_values('Q(s,a)',ascending=False,inplace=True)
+                df.reset_index(drop=True,inplace=True)
+                top_predictions = df.head().values.tolist()
+
             print(len(result["draft"]))
-            #feed_swainbot(form)
     else:
         form = DraftForm()
+        top_predictions = []
 
     context ={
-        "draft_form":form
+        "draft_form":form,
+        "top_pred":top_predictions
     }
     return render(request, 'predict/index.html', context)
