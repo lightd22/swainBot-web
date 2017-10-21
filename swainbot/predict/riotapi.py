@@ -1,5 +1,4 @@
 import requests
-from . import myRiotApiKey
 import time
 api_versions = {
     "staticdata": "v3",
@@ -14,7 +13,6 @@ def set_api_key(key):
     Args:
         key (string): the Riot API key desired for use.
     """
-    myRiotApiKey.api_key = key
     return key
 
 def set_region(reg):

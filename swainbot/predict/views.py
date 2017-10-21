@@ -61,38 +61,45 @@ def validate_draft(form):
         if(state.evaluateState() in DraftState.invalid_states):
             errors[SUBMISSION_ORDER[submission_id]] = "INVALID_SUBMISSION"
 
-    return {"errors":errors, "states":states, "draft":draft}
+    validation = {
+        "errors":errors, 
+        "states":states, 
+        "draft":draft,
+        "bb1e": "id=error",
+        "swain_says": "SWAIN SAYS THE NEXT BEST PICKS ARE...",
+        "picks": ["Kalista", "Tristana", "Varus"]
+    }
+
+    return validation
 
 def predict(request):
+    form = DraftForm(request.GET)
+    result = {}
+    if(form.is_valid()):
+        result = validate_draft(form)
+        errors = result["errors"]
+        states = result["states"]
+        for key in errors:
+            print("{} -> {}".format(key,errors[key]))
+        if states:
+            path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
+            swain = ann_model.Model(path_to_model)
+            state = states["blue"]
+            predictions = swain.predict([state])
+            predictions = predictions[0,:]
+            data = [(a,*state.formatAction(a),predictions[a]) for a in range(len(predictions))]
+            data = [(a,championNameFromId(cid),pos,Q) for (a,cid,pos,Q) in data]
+            df = pd.DataFrame(data, columns=['act_id','cname','pos','Q(s,a)'])
+            df.sort_values('Q(s,a)',ascending=False,inplace=True)
+            df.reset_index(drop=True,inplace=True)
+            top_predictions = df.head().values.tolist()
 
-    if(request.method == 'POST'):
-        form = DraftForm(request.POST)
-        if(form.is_valid()):
-            result = validate_draft(form)
-            errors = result["errors"]
-            states = result["states"]
-            for key in errors:
-                print("{} -> {}".format(key,errors[key]))
-            if states:
-                path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
-                swain = ann_model.Model(path_to_model)
-                state = states["blue"]
-                predictions = swain.predict([state])
-                predictions = predictions[0,:]
-                data = [(a,*state.formatAction(a),predictions[a]) for a in range(len(predictions))]
-                data = [(a,championNameFromId(cid),pos,Q) for (a,cid,pos,Q) in data]
-                df = pd.DataFrame(data, columns=['act_id','cname','pos','Q(s,a)'])
-                df.sort_values('Q(s,a)',ascending=False,inplace=True)
-                df.reset_index(drop=True,inplace=True)
-                top_predictions = df.head().values.tolist()
+        print(len(result["draft"]))
 
-            print(len(result["draft"]))
-    else:
-        form = DraftForm()
-        top_predictions = []
-
-    context ={
+    context = {
         "draft_form":form,
         "top_pred":top_predictions
     }
+    context.update(result)
+    
     return render(request, 'predict/index.html', context)
