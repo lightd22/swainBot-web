@@ -66,8 +66,6 @@ def validate_draft(form):
         "states":states, 
         "draft":draft,
         "bb1e": "id=error",
-        "swain_says": "SWAIN SAYS THE NEXT BEST PICKS ARE...",
-        "picks": ["Kalista", "Tristana", "Varus"]
     }
 
     return validation
@@ -96,10 +94,32 @@ def predict(request):
 
         print(len(result["draft"]))
 
+    print(top_predictions)
     context = {
-        "draft_form":form,
-        "top_pred":top_predictions
+        "draft_form": form,
+        "top_predictions": top_predictions,
+        "swain_says": "SWAIN SAYS YOU SHOULD..."
     }
     context.update(result)
+    context["predictions"] = format_predictions(top_predictions)
     
     return render(request, 'predict/index.html', context)
+
+def format_predictions(top_predictions):
+    formatted_predictions = []
+    positions = ["AD Carry", "Mid", "Top", "Jungle", "Support"]
+
+    ban_format = "Ban {}"
+    pick_format = "Pick {} as {}"
+    for prediction in top_predictions:
+        pick = ""
+        if prediction[2] == -1:
+            pick = ban_format.format(prediction[1])
+        else:
+            this_position = positions[prediction[2] - 1]
+            pick = pick_format.format(prediction[1], this_position)
+        formatted_predictions.append(pick)
+
+    return formatted_predictions
+
+    
