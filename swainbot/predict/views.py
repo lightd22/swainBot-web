@@ -27,11 +27,12 @@ def validate_draft(form):
     missing_field = None
     # Process field into submission order and look for gaps in draft
     for submission in SUBMISSION_ORDER:
-        (team,phase,pick_id) = submission.split("_")
+        (team, phase, pick_id) = submission.split("_")
         value = data[submission]
+        print("submission: " + value)
         if value:
             if MISSING_SUBMISSION:
-                errors[missing_field] = "MISSING_SUBMISSION"
+                errors[missing_field + "_error"] = "id=error"
                 return {"errors":errors, "states":None, "draft":None}
             if phase == "ban":
                 cid = int(value) if int(value) != -1 else None
@@ -43,6 +44,7 @@ def validate_draft(form):
         else:
             MISSING_SUBMISSION = True
             missing_field = submission
+        print("\n")
 
     # Process draft into states and check them for validity
     states = {"blue":DraftState(BLUE,getChampionIds()), "red":DraftState(RED,getChampionIds())}
@@ -64,8 +66,7 @@ def validate_draft(form):
     validation = {
         "errors":errors, 
         "states":states, 
-        "draft":draft,
-        "bb1e": "id=error",
+        "draft":draft
     }
 
     return validation
@@ -73,6 +74,7 @@ def validate_draft(form):
 def predict(request):
     form = DraftForm(request.GET)
     result = {}
+    top_predictions = []
     if(form.is_valid()):
         result = validate_draft(form)
         errors = result["errors"]
@@ -92,13 +94,10 @@ def predict(request):
             df.reset_index(drop=True,inplace=True)
             top_predictions = df.head().values.tolist()
 
-        print(len(result["draft"]))
-
     print(top_predictions)
     context = {
         "draft_form": form,
-        "top_predictions": top_predictions,
-        "swain_says": "SWAIN SAYS YOU SHOULD..."
+        "swain_says": "SWAIN THINKS YOU SHOULD..."
     }
     context.update(result)
     context["predictions"] = format_predictions(top_predictions)
