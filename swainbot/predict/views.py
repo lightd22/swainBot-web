@@ -89,11 +89,10 @@ def predict(request):
     if(form.is_valid()):
         result = validate_draft(form)
         errors = result["errors"]
-        active_state = result["active_state"]
         for key in errors:
             print("{} -> {}".format(key,errors[key]))
         if not errors and active_state:
-            print("Predciting from active state...")
+            active_state = result["active_state"]
             path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
             swain = ann_model.Model(path_to_model)
             predictions = swain.predict([active_state])
@@ -104,7 +103,8 @@ def predict(request):
             df.sort_values('Q(s,a)',ascending=False,inplace=True)
             df.reset_index(drop=True,inplace=True)
             top_predictions = df.head().values.tolist()
-            print(top_predictions)
+        else:
+            top_predictions = []
 
     context = {
         "draft_form":form,
