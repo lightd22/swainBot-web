@@ -27,13 +27,12 @@ def validate_draft(form):
     missing_field = None
     # Process field into submission order and look for gaps in draft
     for submission in SUBMISSION_ORDER:
-        (team, phase, pick_id) = submission.split("_")
+        (team,phase,pick_id) = submission.split("_")
         value = data[submission]
-        print("submission: " + value)
         if value:
             if MISSING_SUBMISSION:
-                errors[missing_field + "_error"] = "id=error"
-                return {"errors":errors, "states":None, "draft":None}
+                errors[missing_field] = "MISSING_SUBMISSION"
+                break
             if phase == "ban":
                 cid = int(value) if int(value) != -1 else None
                 pos = -1
@@ -44,10 +43,13 @@ def validate_draft(form):
         else:
             MISSING_SUBMISSION = True
             missing_field = submission
-        print("\n")
 
+    if(errors):
+        return {"errors":errors, "states":None, "draft":[]}
     # Process draft into states and check them for validity
     states = {"blue":DraftState(BLUE,getChampionIds()), "red":DraftState(RED,getChampionIds())}
+
+    submission_id = 0
     for submission_id in range(len(draft)):
         submission = draft[submission_id]
         active_team = submission[0]
@@ -59,14 +61,24 @@ def validate_draft(form):
         states[active_team].updateState(cid,pos)
         states[inactive_team].updateState(cid,inactive_pos)
 
-    for state in states.values():
-        if(state.evaluateState() in DraftState.invalid_states):
-            errors[SUBMISSION_ORDER[submission_id]] = "INVALID_SUBMISSION"
+        for state in states.values():
+            if(state.evaluateState() in DraftState.invalid_states):
+                errors[SUBMISSION_ORDER[submission_id]] = "INVALID_SUBMISSION"
+
+    if submission_id == len(SUBMISSION_ORDER)-1:
+        # If draft is complete (no picks remaining), set active team to None
+        active_team = None
+        active_state = None
+    else:
+        (active_team,_,_) = SUBMISSION_ORDER[submission_id].split("_")
+        active_state = states[active_team]
 
     validation = {
-        "errors":errors, 
-        "states":states, 
-        "draft":draft
+        "errors":errors,
+        "active_state":active_state,
+        "draft":draft,
+        "bb1e": "id=error",
+        "swain_says": "SWAIN SAYS THE NEXT BEST PICKS ARE...",
     }
 
     return validation
@@ -74,51 +86,30 @@ def validate_draft(form):
 def predict(request):
     form = DraftForm(request.GET)
     result = {}
-    top_predictions = []
     if(form.is_valid()):
         result = validate_draft(form)
         errors = result["errors"]
-        states = result["states"]
+        active_state = result["active_state"]
         for key in errors:
             print("{} -> {}".format(key,errors[key]))
-        if states:
+        if not errors and active_state:
+            print("Predciting from active state...")
             path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
             swain = ann_model.Model(path_to_model)
-            state = states["blue"]
-            predictions = swain.predict([state])
+            predictions = swain.predict([active_state])
             predictions = predictions[0,:]
-            data = [(a,*state.formatAction(a),predictions[a]) for a in range(len(predictions))]
+            data = [(a,*active_state.formatAction(a),predictions[a]) for a in range(len(predictions))]
             data = [(a,championNameFromId(cid),pos,Q) for (a,cid,pos,Q) in data]
             df = pd.DataFrame(data, columns=['act_id','cname','pos','Q(s,a)'])
             df.sort_values('Q(s,a)',ascending=False,inplace=True)
             df.reset_index(drop=True,inplace=True)
             top_predictions = df.head().values.tolist()
+            print(top_predictions)
 
-    print(top_predictions)
     context = {
-        "draft_form": form,
-        "swain_says": "SWAIN THINKS YOU SHOULD..."
+        "draft_form":form,
+        "top_pred":top_predictions
     }
     context.update(result)
-    context["predictions"] = format_predictions(top_predictions)
-    
+
     return render(request, 'predict/index.html', context)
-
-def format_predictions(top_predictions):
-    formatted_predictions = []
-    positions = ["AD Carry", "Mid", "Top", "Jungle", "Support"]
-
-    ban_format = "Ban {}"
-    pick_format = "Pick {} as {}"
-    for prediction in top_predictions:
-        pick = ""
-        if prediction[2] == -1:
-            pick = ban_format.format(prediction[1])
-        else:
-            this_position = positions[prediction[2] - 1]
-            pick = pick_format.format(prediction[1], this_position)
-        formatted_predictions.append(pick)
-
-    return formatted_predictions
-
-    

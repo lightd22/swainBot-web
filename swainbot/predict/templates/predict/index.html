@@ -7,7 +7,7 @@
 		body {
 			background-image: url("http://newsoflegends-content.s3-website-us-east-1.amazonaws.com/2016/02/Swain-Banner-Single.jpg");
 			background-repeat: no-repeat;
-			background-position: top center; 
+			background-position: top center;
 			background-color: dimgray;
 			color: #eeeeee;
 			font-family: "Verdana", sans-serif;
@@ -206,7 +206,7 @@
 		<div class="results">
 			<h3>{{swain_says}}</h3>
 			<ol>
-				{% for pick in predictions %}
+				{% for pick in top_pred %}
 				<li>{{pick}}</li>
 				{% endfor %}
 			</ol>
