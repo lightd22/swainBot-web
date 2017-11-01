@@ -45,7 +45,7 @@ def validate_draft(form):
             missing_field = submission
 
     if(errors):
-        return {"errors":errors, "states":None, "draft":[]}
+        return {"errors":errors, "active_state":None, "draft":[]}
     # Process draft into states and check them for validity
     states = {"blue":DraftState(BLUE,getChampionIds()), "red":DraftState(RED,getChampionIds())}
 
@@ -63,6 +63,8 @@ def validate_draft(form):
 
         for state in states.values():
             if(state.evaluateState() in DraftState.invalid_states):
+                print(state.evaluateState())
+                state.displayState()
                 errors[SUBMISSION_ORDER[submission_id]] = "INVALID_SUBMISSION"
 
     if submission_id == len(SUBMISSION_ORDER)-1:
@@ -89,10 +91,10 @@ def predict(request):
     if(form.is_valid()):
         result = validate_draft(form)
         errors = result["errors"]
+        active_state = result["active_state"]
         for key in errors:
             print("{} -> {}".format(key,errors[key]))
         if not errors and active_state:
-            active_state = result["active_state"]
             path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
             swain = ann_model.Model(path_to_model)
             predictions = swain.predict([active_state])
