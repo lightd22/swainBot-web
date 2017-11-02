@@ -114,4 +114,4 @@ def predict(request):
     }
     context.update(result)
 
-    return render(request, 'predict/index.html', context)
+    return render(request, 'predict/predict.html', context)
