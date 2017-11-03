@@ -31,13 +31,13 @@ ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0']
 # Application definition
 
 INSTALLED_APPS = [
-    'predict.apps.PredictConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'predict.apps.PredictConfig',
 ]
 
 MIDDLEWARE = [
