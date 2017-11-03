@@ -34,7 +34,7 @@ def validate_draft(form):
                 errors[missing_field] = "MISSING_SUBMISSION"
                 break
             if phase == "ban":
-                cid = int(value) if int(value) != -1 else None
+                cid = int(value) if int(value) != DraftForm.NO_BAN else None
                 pos = -1
             else:
                 cid = int(value)

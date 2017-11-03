@@ -3,14 +3,19 @@ from .models import Champion, Position
 
 class DraftForm(forms.Form):
     CHAMPIONS = Champion.objects.order_by('display_name')
-    #CHAMPION_CHOICES = [(str(champion.id),champion.display_name) for champion in CHAMPIONS]
-    #BAN_CHOICES = [("",""),("-1","No Ban")]+CHAMPION_CHOICES
     CHAMPION_CHOICES = []
-    BAN_CHOICES = []
+    for champion in CHAMPIONS:
+        CHAMPION_CHOICES.append((champion.id, champion.display_name))
+        
     PICK_CHOICES = [("","")]+CHAMPION_CHOICES
+    NO_BAN = -1
+    BAN_CHOICES = [("",""),(NO_BAN,"No Ban")]+CHAMPION_CHOICES
+
     POSITIONS = Position.objects.order_by('id')
-    #POSITION_CHOICES = [(None,"")]+[(position.id, position.display_name) for position in POSITIONS]
-    POSITION_CHOICES = []
+    POSITION_CHOICES = [(None,"")]
+    for position in POSITIONS:
+        POSITION_CHOICES.append((position.id, position.display_name))
+
     blue_style_class = "blue"
     red_style_class = "red"
     # fuck everything below this line
