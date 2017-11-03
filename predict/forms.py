@@ -4,8 +4,8 @@ from .models import Champion, Position
 class DraftForm(forms.Form):
     CHAMPIONS = Champion.objects.order_by('display_name')
     CHAMPION_CHOICES = []
-#    for champion in CHAMPIONS:
-#        CHAMPION_CHOICES.append((champion.id, champion.display_name))
+    for champion in CHAMPIONS:
+        CHAMPION_CHOICES.append((champion.id, champion.display_name))
 
     PICK_CHOICES = [("","")]+CHAMPION_CHOICES
     NO_BAN = -1
@@ -13,8 +13,8 @@ class DraftForm(forms.Form):
 
     POSITIONS = Position.objects.order_by('id')
     POSITION_CHOICES = [(None,"")]
-#    for position in POSITIONS:
-#        POSITION_CHOICES.append((position.id, position.display_name))
+    for position in POSITIONS:
+        POSITION_CHOICES.append((position.id, position.display_name))
 
     blue_style_class = "blue"
     red_style_class = "red"
