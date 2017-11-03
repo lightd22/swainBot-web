@@ -11,10 +11,15 @@ class DraftForm(forms.Form):
     NO_BAN = -1
     BAN_CHOICES = [("",""),(NO_BAN,"No Ban")]+CHAMPION_CHOICES
 
-    POSITIONS = Position.objects.order_by('id')
-    POSITION_CHOICES = [(None,"")]
-    for position in POSITIONS:
-        POSITION_CHOICES.append((position.id, position.display_name))
+    #POSITIONS = Position.objects.order_by('id')
+    #    for position in POSITIONS:
+    #        POSITION_CHOICES.append((position.id, position.display_name))
+    POSITION_CHOICES = [(None,""),
+                        (1,"ADC"),
+                        (2,"MID"),
+                        (3,"TOP"),
+                        (4,"JNG"),
+                        (5,"SUP")]
 
     blue_style_class = "blue"
     red_style_class = "red"
