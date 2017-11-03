@@ -1,11 +1,12 @@
 from django import forms
 from .models import Champion, Position
 
-
 class DraftForm(forms.Form):
     CHAMPIONS = Champion.objects.order_by('display_name')
-    CHAMPION_CHOICES = [(str(champion.id),champion.display_name) for champion in CHAMPIONS]
-    BAN_CHOICES = [("",""),("-1","No Ban")]+CHAMPION_CHOICES
+    #CHAMPION_CHOICES = [(str(champion.id),champion.display_name) for champion in CHAMPIONS]
+    #BAN_CHOICES = [("",""),("-1","No Ban")]+CHAMPION_CHOICES
+    CHAMPION_CHOICES = []
+    BAN_CHOICES = []
     PICK_CHOICES = [("","")]+CHAMPION_CHOICES
     POSITIONS = Position.objects.order_by('id')
     POSITION_CHOICES = [(None,"")]+[(position.id, position.display_name) for position in POSITIONS]
