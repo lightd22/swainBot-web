@@ -9,7 +9,8 @@ class DraftForm(forms.Form):
     BAN_CHOICES = []
     PICK_CHOICES = [("","")]+CHAMPION_CHOICES
     POSITIONS = Position.objects.order_by('id')
-    POSITION_CHOICES = [(None,"")]+[(position.id, position.display_name) for position in POSITIONS]
+    #POSITION_CHOICES = [(None,"")]+[(position.id, position.display_name) for position in POSITIONS]
+    POSITION_CHOICES = []
     blue_style_class = "blue"
     red_style_class = "red"
     # fuck everything below this line
