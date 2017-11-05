@@ -49,7 +49,7 @@ def validate_draft(form):
     # Process draft into states and check them for validity
     states = {"blue":DraftState(BLUE,getChampionIds()), "red":DraftState(RED,getChampionIds())}
 
-    submission_id = 0
+    submission_id = -1
     for submission_id in range(len(draft)):
         submission = draft[submission_id]
         active_team = submission[0]
@@ -67,12 +67,12 @@ def validate_draft(form):
                 state.displayState()
                 errors[SUBMISSION_ORDER[submission_id]] = "INVALID_SUBMISSION"
 
-    if submission_id == len(SUBMISSION_ORDER)-1:
+    if submission_id == (len(SUBMISSION_ORDER)-1):
         # If draft is complete (no picks remaining), set active team to None
         active_team = None
         active_state = None
     else:
-        (active_team,_,_) = SUBMISSION_ORDER[submission_id].split("_")
+        (active_team,_,_) = SUBMISSION_ORDER[submission_id+1].split("_")
         active_state = states[active_team]
 
     validation = {
@@ -80,7 +80,7 @@ def validate_draft(form):
         "active_state":active_state,
         "draft":draft,
         "bb1e": "id=error",
-        "swain_says": "SWAIN SAYS THE NEXT BEST PICKS ARE...",
+        "swain_says": "SWAIN SAYS THE NEXT BEST PICKS FOR {} TEAM ARE...".format(active_team).upper(),
     }
 
     return validation
@@ -88,6 +88,7 @@ def validate_draft(form):
 def predict(request):
     form = DraftForm(request.GET)
     result = {}
+    errors = {}
     if(form.is_valid()):
         result = validate_draft(form)
         errors = result["errors"]
@@ -110,7 +111,8 @@ def predict(request):
 
     context = {
         "draft_form":form,
-        "top_pred":top_predictions
+        "top_pred":top_predictions,
+        "errors": errors
     }
     context.update(result)
 

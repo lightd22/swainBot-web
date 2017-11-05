@@ -111,92 +111,91 @@
 		</h3>
 		<form action="{% url 'predict:predict' %}" method="GET" id="draft_form">
 			<div class="left-half">
-				<p {{errors.blue_ban_0_error}}>
 					<label for="id_blue_ban_0"> Ban 0 </label>
 					{{draft_form.blue_ban_0}}
 				</p>
-				<p {{errors.blue_ban_1_error}}>
+				<p>
 					<label for="id_blue_ban_1"> Ban 1 </label>
 					{{draft_form.blue_ban_1}}
 				</p>
-				<p class="phase-break" {{errors.blue_ban_2_error}}>
+				<p class="phase-break">
 					<label for="id_blue_ban_2"> Ban 2 </label>
 					{{draft_form.blue_ban_2}}
 				</p>
 
-				<p {{errors.blue_pick_0_error}}>
+				<p>
 					<label for="id_blue_pick_0"> Pick 0 </label>
 					{{draft_form.blue_pick_0}} {{draft_form.blue_pos_0}}
 				</p>
-				<p {{errors.blue_pick_1_error}}>
+				<p>
 					<label for="id_blue_pick_1"> Pick 1 </label>
 					{{draft_form.blue_pick_1}} {{draft_form.blue_pos_1}}
 				</p>
-				<p {{errors.blue_pick_2_error}} class="phase-break">
+				<p class="phase-break">
 					<label for="id_blue_pick_2"> Pick 2 </label>
 					{{draft_form.blue_pick_2}} {{draft_form.blue_pos_2}}
 				</p>
 
-				<p {{errors.blue_ban_3_error}}>
+				<p>
 					<label for="id_blue_ban_3"> Ban 3 </label>
 					{{draft_form.blue_ban_3}}
 				</p>
-				<p {{errors.blue_ban_4_error}} class="phase-break">
+				<p class="phase-break">
 					<label for="id_blue_ban_4"> Ban 4 </label>
 					{{draft_form.blue_ban_4}}
 				</p>
 
-				<p {{errors.blue_pick_3_error}}>
+				<p>
 					<label for="id_blue_pick_3"> Pick 3 </label>
 					{{draft_form.blue_pick_3}} {{draft_form.blue_pos_3}}
 				</p>
-				<p {{errors.blue_pick_4_error}}>
+				<p>
 					<label for="id_blue_pick_4"> Pick 4 </label>
 					{{draft_form.blue_pick_4}} {{draft_form.blue_pos_4}}
 				</p>
 			</div>
 
 			<div class="right-half">
-				<p {{errors.red_ban_0_error}}>
+				<p>
 					<label for="id_red_ban_0"> Ban 0 </label>
 					{{draft_form.red_ban_0}}
 				</p>
-				<p {{errors.red_ban_1_error}}>
+				<p>
 					<label for="id_red_ban_1" > Ban 1 </label>
 					{{draft_form.red_ban_1}}
 				</p>
-				<p class="phase-break" {{errors.red_ban_2_error}}>
+				<p class="phase-break">
 					<label for="id_red_ban_2"> Ban 2 </label>
 					{{draft_form.red_ban_2}}
 				</p>
 
-				<p {{errors.red_pick_0_error}}>
+				<p>
 					<label for="id_red_pick_0"> Pick 0 </label>
 					{{draft_form.red_pick_0}} {{draft_form.red_pos_0}}
 				</p>
-				<p {{errors.red_pick_1_error}}>
+				<p>
 					<label for="id_red_pick_1"> Pick 1 </label>
 					{{draft_form.red_pick_1}} {{draft_form.red_pos_1}}
 				</p>
-				<p {{errors.red_pick_2_error}} class="phase-break">
+				<p class="phase-break">
 					<label for="id_red_pick_2"> Pick 2 </label>
 					{{draft_form.red_pick_2}} {{draft_form.red_pos_2}}
 				</p>
 
-				<p {{errors.red_ban_3_error}}>
+				<p>
 					<label for="id_red_ban_3"> Ban 3 </label>
 					{{draft_form.red_ban_3}}
 				</p>
-				<p {{errors.red_ban_4_error}} class="phase-break">
+				<p class="phase-break">
 					<label for="id_red_ban_4"> Ban 4 </label>
 					{{draft_form.red_ban_4}}
 				</p>
 
-				<p {{errors.red_pick_3_error}}>
+				<p>
 					<label for="id_red_pick_3"> Pick 3 </label>
 					{{draft_form.red_pick_3}} {{draft_form.red_pos_3}}
 				</p>
-				<p {{errors.red_pick_4_error}}>
+				<p>
 					<label for="id_red_pick_4"> Pick 4 </label>
 					{{draft_form.red_pick_4}} {{draft_form.red_pos_4}}
 				</p>
@@ -204,8 +203,16 @@
 			<input type="submit" class="predict-button" value="THE EARLY BIRD GUTS THE WORM" form="draft_form">
 			<input type="reset" class="predict-button" value="RESET" form="draft_form">
 		</form>
+
 		<div class="results">
+			{% if errors %}
+				{% for err_field,err_msg in errors.items %}
+					<h3 id="error">ERROR IN: {{err_field}}->{{err_msg}}</h3>
+				{% endfor %}
+			{% endif %}
+
 			<h3>{{swain_says}}</h3>
+			<p></p>
 			<ol>
 				{% for pick in top_pred %}
 				<li>{{pick}}</li>
