@@ -89,6 +89,8 @@ def predict(request):
     form = DraftForm(request.GET)
     result = {}
     errors = {}
+    pos_labels = {key:value for (key,value) in form.POSITION_CHOICES}
+    pos_labels[-1] = "BAN"
     if(form.is_valid()):
         result = validate_draft(form)
         errors = result["errors"]
@@ -101,11 +103,13 @@ def predict(request):
             predictions = swain.predict([active_state])
             predictions = predictions[0,:]
             data = [(a,*active_state.formatAction(a),predictions[a]) for a in range(len(predictions))]
-            data = [(a,championNameFromId(cid),pos,Q) for (a,cid,pos,Q) in data]
-            df = pd.DataFrame(data, columns=['act_id','cname','pos','Q(s,a)'])
+            data = [(championNameFromId(cid),pos_labels[pos],Q) for (a,cid,pos,Q) in data]
+            df = pd.DataFrame(data, columns=['cname','pos','Q(s,a)'])
             df.sort_values('Q(s,a)',ascending=False,inplace=True)
             df.reset_index(drop=True,inplace=True)
-            top_predictions = df.head().values.tolist()
+            df['rank'] = df.index+1
+
+            top_predictions = df[['rank','cname','pos','Q(s,a)']].round({'Q(s,a)':4}).head().values.tolist()
         else:
             top_predictions = []
 

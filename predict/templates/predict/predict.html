@@ -64,8 +64,31 @@
 			box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
 		}
 
-		.results {
+		.results_section {
 			padding-left: 1em;
+		}
+
+		.results {
+  			font-family: "Verdana", sans-serif;
+		    border-collapse: collapse;
+		    width: 47%;
+		}
+
+		.results td, .results th {
+		    border: 1px solid #ddd;
+		    padding: 8px;
+		}
+
+		.results tr:nth-child(even){background-color: #7c7c7c;}
+
+		.results tr:hover {background-color: #4f4f4f;}
+
+		.results th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #dimgray;
+    color: #eeeeee;
 		}
 
 		select {
@@ -200,11 +223,11 @@
 					{{draft_form.red_pick_4}} {{draft_form.red_pos_4}}
 				</p>
 			</div>
-			<input type="submit" class="predict-button" value="THE EARLY BIRD GUTS THE WORM" form="draft_form">
+			<input type="submit" class="predict-button" value="PREDICT" form="draft_form">
 			<input type="reset" class="predict-button" value="RESET" form="draft_form">
 		</form>
 
-		<div class="results">
+		<div class="results_section">
 			{% if errors %}
 				{% for err_field,err_msg in errors.items %}
 					<h3 id="error">ERROR IN: {{err_field}}->{{err_msg}}</h3>
@@ -213,11 +236,22 @@
 
 			<h3>{{swain_says}}</h3>
 			<p></p>
-			<ol>
+			<table class="results">
+				<tr>
+					<th>Rank</th>
+					<th>Name</th>
+					<th>Position</th>
+					<th>Score</th>
+				</tr>
 				{% for pick in top_pred %}
-				<li>{{pick}}</li>
+				<tr>
+					<td>{{pick.0}}</td>
+					<td>{{pick.1}}</td>
+					<td>{{pick.2}}</td>
+					<td>{{pick.3}}</td>
+				</tr>
 				{% endfor %}
-			</ol>
+			</table>
 		</div>
 	</body>
 </html>
