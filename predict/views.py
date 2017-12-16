@@ -102,6 +102,7 @@ def predict(request):
             swain = ann_model.Model(path_to_model)
             predictions = swain.predict([active_state])
             predictions = predictions[0,:]
+            print(len(predictions))
             data = [(a,*active_state.formatAction(a),predictions[a]) for a in range(len(predictions))]
             data = [(championNameFromId(cid),pos_labels[pos],Q) for (a,cid,pos,Q) in data]
             df = pd.DataFrame(data, columns=['cname','pos','Q(s,a)'])
