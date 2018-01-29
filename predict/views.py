@@ -7,9 +7,12 @@ import pandas as pd
 from .models import Champion, Position
 from .forms import DraftForm
 from . import ann_model
-from .draftstate import DraftState, get_active_team
-from .championinfo import getChampionIds, championNameFromId
+from .draftstate import DraftState
+from .champion_info import get_champion_ids, champion_name_from_id
 # Create your views here.
+
+path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
+swain = ann_model.Model(path_to_model)
 
 def validate_draft(form):
     RED = DraftState.RED_TEAM
@@ -47,7 +50,7 @@ def validate_draft(form):
     if(errors):
         return {"errors":errors, "active_state":None, "draft":[]}
     # Process draft into states and check them for validity
-    states = {"blue":DraftState(BLUE,getChampionIds()), "red":DraftState(RED,getChampionIds())}
+    states = {"blue":DraftState(BLUE,get_champion_ids()), "red":DraftState(RED,get_champion_ids())}
 
     submission_id = -1
     for submission_id in range(len(draft)):
@@ -58,13 +61,13 @@ def validate_draft(form):
         (cid,pos) = submission[1:]
         inactive_pos = pos if pos==-1 else 0 # Mask inactive positions for non-bans
 
-        states[active_team].updateState(cid,pos)
-        states[inactive_team].updateState(cid,inactive_pos)
+        states[active_team].update(cid,pos)
+        states[inactive_team].update(cid,inactive_pos)
 
         for state in states.values():
-            if(state.evaluateState() in DraftState.invalid_states):
-                print(state.evaluateState())
-                state.displayState()
+            if(state.evaluate() in DraftState.invalid_states):
+                print(state.evaluate())
+                state.display()
                 errors[SUBMISSION_ORDER[submission_id]] = "INVALID_SUBMISSION"
 
     if submission_id == (len(SUBMISSION_ORDER)-1):
@@ -98,13 +101,11 @@ def predict(request):
         for key in errors:
             print("{} -> {}".format(key,errors[key]))
         if not errors and active_state:
-            path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
-            swain = ann_model.Model(path_to_model)
             predictions = swain.predict([active_state])
             predictions = predictions[0,:]
-            print(len(predictions))
-            data = [(a,*active_state.formatAction(a),predictions[a]) for a in range(len(predictions))]
-            data = [(championNameFromId(cid),pos_labels[pos],Q) for (a,cid,pos,Q) in data]
+            
+            data = [(a,*active_state.format_action(a),predictions[a]) for a in range(len(predictions))]
+            data = [(champion_name_from_id(cid),pos_labels[pos],Q) for (a,cid,pos,Q) in data]
             df = pd.DataFrame(data, columns=['cname','pos','Q(s,a)'])
             df.sort_values('Q(s,a)',ascending=False,inplace=True)
             df.reset_index(drop=True,inplace=True)

@@ -1,27 +1,9 @@
 import numpy as np
-from .championinfo import championNameFromId, validChampionId
+from .champion_info import champion_name_from_id, valid_champion_id, get_champion_ids
+from .draft import Draft
 
 class InvalidDraftState(Exception):
     pass
-
-def get_active_team(submission_count):
-    """
-    Gets the active team in the draft based on the number of submissions currently present
-    Args:
-        submission_count (int): number of submissions currently submitted
-    Returns:
-        DraftState.BLUE_TEAM if blue is active, else DraftState.RED_TEAM
-    """
-    blue = DraftState.BLUE_TEAM
-    red = DraftState.RED_TEAM
-    ACTIVE_TEAM = [blue, red, blue, red, blue, red,
-                   blue, red, red, blue, blue, red,
-                   red, blue, red, blue,
-                   red, blue, red]
-    if submission_count > len(ACTIVE_TEAM):
-        raise
-
-    return ACTIVE_TEAM[submission_count]
 
 class DraftState:
     """
@@ -59,14 +41,12 @@ class DraftState:
                       TOO_MANY_BANS, TOO_MANY_PICKS]
 
     DRAFT_COMPLETE = 1
-    BLUE_TEAM = 0
-    RED_TEAM = 1
-    BAN_PHASE_LENGTHS = [6,4] # Number of bans in each ban phase
-    NUM_BANS = sum(BAN_PHASE_LENGTHS) # Total number of bans in draft
-    PICK_PHASE_LENGTHS = [6,4] # Number of picks in each pick phase
-    NUM_PICKS = sum(PICK_PHASE_LENGTHS) # Total number of picks in draft
+    BLUE_TEAM = Draft.BLUE_TEAM
+    RED_TEAM = Draft.RED_TEAM
+    BAN_PHASE = Draft.BAN
+    PICK_PHASE = Draft.PICK
 
-    def __init__(self, team, champ_ids, num_positions = 5):
+    def __init__(self, team, champ_ids = get_champion_ids(), num_positions = 5, draft = Draft('default')):
         #TODO (Devin): This should make sure that numChampions >= num_positions
         self.num_champions = len(champ_ids)
         self.num_positions = num_positions
@@ -76,9 +56,13 @@ class DraftState:
         self.state = np.zeros((self.num_champions, self.num_positions+2), dtype=bool)
         self.picks = []
         self.bans = []
+        self.selected_pos = []
 
-        #TODO (Devin): This should check for an invalid team passed
         self.team = team
+        self.draft_structure = draft
+        # Get phase information from draft
+        self.BAN_PHASE_LENGTHS = self.draft_structure.PHASE_LENGTHS[DraftState.BAN_PHASE]
+        self.PICK_PHASE_LENGTHS = self.draft_structure.PHASE_LENGTHS[DraftState.PICK_PHASE]
 
         # The dicts pos_to_pos_index and pos_index_to_pos contain the mapping
         # from position labels to indices to the state matrix and vice versa.
@@ -88,9 +72,78 @@ class DraftState:
         self.pos_to_pos_index = dict(zip(self.positions,self.pos_indices))
         self.pos_index_to_pos = dict(zip(self.pos_indices,self.positions))
 
-    def getChampId(self,index):
+    def reset(self):
         """
-        getChampId returns the valid champion ID corresponding to the given state index. Since champion IDs are not contiguously defined or even necessarily ordered,
+        Resets draft state back to default values.
+        Args:
+            None
+        Returns:
+            None
+        """
+        self.state[:] = False
+        self.picks = []
+        self.bans = []
+        self.selected_pos = []
+
+    def get_valid_actions(self, form="mask"):
+        """
+        Returns a valid actions for the current state.
+        Input:
+            self.state
+            form (string): default returns actions as a mask. "list" returns actions as a list of ids
+        Returns:
+            action_ids (list[bool/int]): valid actions that can be taken from state. If form = "list" ids are returned as a list of action_ids,
+                otherwise actions are returned as a boolean mask
+
+        If the draft is complete or in an invalid state, get_valid_actions will return an empty list of actions.
+        """
+        # Check if draft is complete or invalid
+        if(self.evaluate()):
+            if(form == "list"):
+                return np.array([])
+            else:
+                return np.zeros_like(self.state[:,1:].reshape(-1))
+
+        sub_count = len(self.bans)+len(self.picks)
+        phase = self.draft_structure.get_active_phase(sub_count)
+        champ_available = np.logical_not(np.amax(self.state[:,:],axis=1))
+        pos_available = [pos for pos in range(1, self.num_positions+1) if pos not in self.selected_pos]
+        valid_actions = np.zeros_like(self.state[:,1:])
+        if(phase == Draft.BAN):
+            # only bans are (potentially) valid during ban phase
+            valid_actions[:,0] = champ_available
+        else:
+            # only picks are (potentially) valid during pick phase
+            for pos in pos_available:
+                valid_actions[:,pos] = champ_available
+
+        if(form == "list"):
+            return np.nonzero(valid_actions.reshape(-1))
+        else:
+            return valid_actions.reshape(-1)
+
+    def is_submission_legal(self, champion_id, position):
+        """
+        Checks if submission (champion_id, position) is a valid and legal submission for the current state.
+        Returns:
+            True if submission is legal, False otherwise.
+        """
+        if(not self.can_ban(champion_id) or not self.can_pick(champion_id)):
+            return False
+        sub_count = len(self.bans)+len(self.picks)
+        phase = self.draft_structure.get_active_phase(sub_count)
+        if phase == DraftState.BAN_PHASE and position != -1:
+            return False
+        if phase == DraftState.PICK_PHASE:
+            pos_index = self.get_position_index(position)
+            is_pos_filled = np.amax(self.state[:,pos_index])
+            if(is_pos_filled):
+                return False
+        return True
+
+    def get_champ_id(self,index):
+        """
+        get_champ_id returns the valid champion ID corresponding to the given state index. Since champion IDs are not contiguously defined or even necessarily ordered,
         this mapping will not be trivial. If index is invalid, returns -1.
         Args:
             index (int): location index in the state array of the desired champion.
@@ -101,9 +154,9 @@ class DraftState:
             return -1
         return self.state_index_to_champ_id[index]
 
-    def getStateIndex(self,champ_id):
+    def get_state_index(self,champ_id):
         """
-        getStateIndex returns the state index corresponding to the given champion ID. Since champion IDs are not contiguously defined or even necessarily ordered,
+        get_state_index returns the state index corresponding to the given champion ID. Since champion IDs are not contiguously defined or even necessarily ordered,
         this mapping is non-trivial. If champ_id is invalid, returns -1.
         Args:
             champ_id (int): id of champion to look up
@@ -114,9 +167,9 @@ class DraftState:
             return -1
         return self.champ_id_to_state_index[champ_id]
 
-    def getPositionIndex(self,position):
+    def get_position_index(self,position):
         """
-        getPositionIndex returns the index of the state matrix corresponding to the given position label.
+        get_position_index returns the index of the state matrix corresponding to the given position label.
         If the position is invalid, returns False.
         Args:
             position (int): position label to look up
@@ -127,9 +180,9 @@ class DraftState:
             return False
         return self.pos_to_pos_index[position]
 
-    def getPosition(self, pos_index):
+    def get_position(self, pos_index):
         """
-        getPosition returns the position label corresponding to the given position index into the state matrix.
+        get_position returns the position label corresponding to the given position index into the state matrix.
         If the position index is invalid, returns False.
         Args:
             pos_index (int): position index to look up
@@ -148,10 +201,10 @@ class DraftState:
         Returns:
             A copy of self.state
         """
-        if(self.evaluateState() in DraftState.invalid_states):
-            raise InvalidDraftState("Attempting to format an invalid draft state for network input with code {}".format(self.evaluateState()))
+        if(self.evaluate() in DraftState.invalid_states):
+            raise InvalidDraftState("Attempting to format an invalid draft state for network input with code {}".format(self.evaluate()))
 
-        return self.state
+        return self.state.reshape(-1)
 
     def format_secondary_inputs(self):
         """
@@ -162,29 +215,26 @@ class DraftState:
         Returns:
             Numpy vector of secondary network inputs
         """
-        if(self.evaluateState() in DraftState.invalid_states):
-            raise InvalidDraftState("Attempting to format an invalid draft state for network input with code {}".format(self.evaluateState()))
+        if(self.evaluate() in DraftState.invalid_states):
+            raise InvalidDraftState("Attempting to format an invalid draft state for network input with code {}".format(self.evaluate()))
 
         # First segment of information checks whether each position has been or not filled in the state
         # This is done by looking at columns in the subarray corresponding to positions 1 thru 5
-        start = self.getPositionIndex(1)
-        end = self.getPositionIndex(5)
+        start = self.get_position_index(1)
+        end = self.get_position_index(5)
         secondary_inputs = np.amax(self.state[:,start:end+1],axis=0)
 
         # Second segment checks if the phase corresponding to this state is a pick phase
         # This is done by counting the number of bans currently submitted. Note that this assumes
         # that state is currently a valid state. If this is not necessarily the case a check can be made using
-        # evaluateState().
-        num_bans = len(self.bans)
-        num_picks = len(self.picks)
-        is_pick_phase = False
-        if((num_bans==DraftState.BAN_PHASE_LENGTHS[0] and num_picks < DraftState.PICK_PHASE_LENGTHS[0]) or
-           (num_bans==DraftState.NUM_BANS and num_picks < DraftState.NUM_PICKS)):
-            is_pick_phase = True
+        # evaluate().
+        submission_count = len(self.bans)+len(self.picks)
+        phase = self.draft_structure.get_active_phase(submission_count)
+        is_pick_phase = phase == DraftState.PICK_PHASE
         secondary_inputs = np.append(secondary_inputs, is_pick_phase)
         return secondary_inputs
 
-    def formatAction(self,action):
+    def format_action(self,action):
         """
         Format input action into the corresponding tuple (champ_id, position) which describes the input action.
         Args:
@@ -192,44 +242,43 @@ class DraftState:
                           of the flattened 'actionable state' matrix
         Returns:
             (championId, position) (tuple of ints): Tuple of integer values which may be passed as arguments to either
-            self.addPick() or self.addBan() depending on the value of position. If position = -1 -> action is a ban otherwise action
+            self.add_pick() or self.add_ban() depending on the value of position. If position = -1 -> action is a ban otherwise action
             is a pick.
 
-        Note: formatAction() explicitly indexes into 'actionable state' matrix which excludes the portion of the state
-        matrix corresponding to opponent team submission. In practice this means that (cid, pos) = formatAction(a) will
+        Note: format_action() explicitly indexes into 'actionable state' matrix which excludes the portion of the state
+        matrix corresponding to opponent team submission. In practice this means that (cid, pos) = format_action(a) will
         never output pos = 0.
         """
         # 'actionable state' is the sub-state of the state matrix with 'enemy picks' column removed.
         actionable_state = self.state[:,1:]
         if(action not in range(actionable_state.size)):
-            raise "Invalid action to formatAction()!"
+            raise "Invalid action to format_action()!"
         (state_index, position_index) = np.unravel_index(action,actionable_state.shape)
         # Action corresponds to a submission that we are allowed to make, ie. a pick or a ban.
         # We can't make submissions to the enemy team, so the indicies corresponding to these actions are removed.
         # position_index needs to be shifted by 1 in order to correctly index into full state array
         position_index += 1
-        position = self.getPosition(position_index)
-        champ_id = self.getChampId(state_index)
+        position = self.get_position(position_index)
+        champ_id = self.get_champ_id(state_index)
         return (champ_id,position)
 
-    def getAction(self, champion_id, position):
+    def get_action(self, champion_id, position):
         """
-        Given a (championId, position) submission pair. Return the corresponding action index in the flattened state array.
+        Given a (champion_id, position) submission pair. Return the corresponding action index in the flattened actionable state array.
         Args:
-            championId (int): Valid id of a champion to be picked/banned.
+            champion_id (int): id of a champion to be picked/banned.
             position (int): Position of champion to be selected. The value of position determines if championId is interpreted as a pick or ban:
                 position = -1 -> champion ban submitted.
-                position = 0 -> champion selection submitted by the opposing team.
                 0 < position <= num_positions -> champion selection submitted by our team for pos = position
         Returns:
-            action (int): Action to be interpreted as index into the flattened state vector. If no such action can be found, returns -1
+            action (int): Action to be interpreted as index into the flattened actionable state vector. If no such action can be found, returns -1
 
-        Note: getAction() explicitly indexes into 'actionable state' matrix which excludes the portion of the state
-        matrix corresponding to opponent team submission. In practice this means that a = formatAction(cid,pos) will
+        Note: get_action() explicitly indexes into 'actionable state' matrix which excludes the portion of the state
+        matrix corresponding to opponent team submission. In practice this means that a = format_action(cid,pos) will
         produce an invalid action for pos = 0.
         """
-        state_index = self.getStateIndex(champion_id)
-        pos_index = self.getPositionIndex(position)
+        state_index = self.get_state_index(champion_id)
+        pos_index = self.get_position_index(position)
         if ((state_index==-1) or (pos_index not in range(1,self.state.shape[1]))):
             print("Invalid state index or position out of range!")
             print("cid = {}".format(champion_id))
@@ -237,11 +286,10 @@ class DraftState:
             return -1
         # Convert position index for full state matrix into index for actionable state
         pos_index -= 1
-        actionable_state = self.state[:,1:]
-        action = np.ravel_multi_index((state_index,pos_index),actionable_state.shape)
+        action = np.ravel_multi_index((state_index,pos_index),self.state[:,1:].shape)
         return action
 
-    def updateState(self, champion_id, position):
+    def update(self, champion_id, position):
         """
         Attempt to update the current state of the draft and pick/ban lists with a given championId.
         Returns: True is selection was successful, False otherwise
@@ -261,29 +309,30 @@ class DraftState:
         # Submitted picks of the form (champ_id, pos) correspond with the selection champion = champion_id in position = pos.
         # Bans are given pos = -1 and enemy picks pos = 0. However, this is not how they are stored in the state array.
         # Finally this doesn't match indexing used for state array and action vector indexing (which follow state indexing).
-        if((position < -1) or (position > self.num_positions) or (not validChampionId(champion_id))):
+        if((position < -1) or (position > self.num_positions) or (not valid_champion_id(champion_id))):
             return False
 
         index = self.champ_id_to_state_index[champion_id]
-        pos_index = self.getPositionIndex(position)
+        pos_index = self.get_position_index(position)
         if(position == -1):
             self.bans.append(champion_id)
         else:
             self.picks.append(champion_id)
+            self.selected_pos.append(position)
 
         self.state[index,pos_index] = True
         return True
 
-    def displayState(self):
-        #TODO (Devin): Clean up displayState to make it prettier.
+    def display(self):
+        #TODO (Devin): Clean up display to make it prettier.
         print("=== Begin Draft State ===")
         print("There are {num_picks} picks and {num_bans} bans completed in this draft. \n".format(num_picks=len(self.picks),num_bans=len(self.bans)))
 
-        print("Banned Champions: {0}".format(list(map(championNameFromId, self.bans))))
-        print("Picked Champions: {0}".format(list(map(championNameFromId, self.picks))))
-        pos_index = self.getPositionIndex(0)
-        enemy_draft_ids = list(map(self.getChampId, list(np.where(self.state[:,pos_index])[0])))
-        print("Enemy Draft: {0}".format(list(map(championNameFromId,enemy_draft_ids))))
+        print("Banned Champions: {0}".format(list(map(champion_name_from_id, self.bans))))
+        print("Picked Champions: {0}".format(list(map(champion_name_from_id, self.picks))))
+        pos_index = self.get_position_index(0)
+        enemy_draft_ids = list(map(self.get_champ_id, list(np.where(self.state[:,pos_index])[0])))
+        print("Enemy Draft: {0}".format(list(map(champion_name_from_id,enemy_draft_ids))))
 
         print("Ally Draft:")
         for pos_index in range(2,len(self.state[0,:])): # Iterate through each position columns in state
@@ -291,29 +340,29 @@ class DraftState:
             if not champ_index.size: # No pick is found for this position, create a filler string
                 draft_name = "--"
             else:
-                draft_name = championNameFromId(self.getChampId(champ_index[0]))
+                draft_name = champion_name_from_id(self.get_champ_id(champ_index[0]))
             print("Position {p}: {c}".format(p=pos_index-1,c=draft_name))
         print("=== End Draft State ===")
 
-    def canPick(self, champion_id):
+    def can_pick(self, champion_id):
         """
         Check to see if a champion is available to be selected.
         Returns: True if champion is a valid selection, False otherwise.
         Args:
             champion_id (int): Id of champion to check for valid selection.
         """
-        return ((champion_id not in self.picks) and championinfo.validChampionId(champion_id))
+        return ((champion_id not in self.picks) and valid_champion_id(champion_id))
 
-    def canBan(self, champion_id):
+    def can_ban(self, champion_id):
         """
         Check to see if a champion is available to be banned.
         Returns: True if champion is a valid ban, False otherwise.
         Args:
             champion_id (int): Id of champion to check for valid ban.
         """
-        return ((champion_id not in self.bans) and championinfo.validChampionId(champion_id))
+        return ((champion_id not in self.bans) and valid_champion_id(champion_id))
 
-    def addPick(self, champion_id, position):
+    def add_pick(self, champion_id, position):
         """
         Attempt to add a champion to the selected champion list and update the state.
         Returns: True is selection was successful, False otherwise
@@ -321,31 +370,32 @@ class DraftState:
             champion_id (int): Id of champion to add to pick list.
             position (int): Position of champion to be selected. If position = 0 this is interpreted as a selection submitted by the opposing team.
         """
-        if((position < 0) or (position > self.num_positions) or (not validChampionId(champion_id))):
+        if((position < 0) or (position > self.num_positions) or (not valid_champion_id(champion_id))):
             return False
         self.picks.append(champion_id)
-        index = self.getStateIndex(champion_id)
-        pos_index = self.getPositionIndex(position)
+        self.selected_pos.append(position)
+        index = self.get_state_index(champion_id)
+        pos_index = self.get_position_index(position)
         self.state[index,pos_index] = True
         return True
 
-    def addBan(self, champion_id):
+    def add_ban(self, champion_id):
         """
         Attempt to add a champion to the banned champion list and update the state.
         Returns: True is ban was successful, False otherwise
         Args:
             champion_id (int): Id of champion to add to bans.
         """
-        if(not validChampionId(champion_id)):
+        if(not valid_champion_id(champion_id)):
             return False
         self.bans.append(champion_id)
-        index = self.getStateIndex(champion_id)
-        self.state[index,self.getPositionIndex(-1)] = True
+        index = self.get_state_index(champion_id)
+        self.state[index,self.get_position_index(-1)] = True
         return True
 
-    def evaluateState(self):
+    def evaluate(self):
         """
-        evaluateState checks the current state and determines if the draft as it is currently recorded is valid.
+        evaluate checks the current state and determines if the draft as it is currently recorded is valid.
         Returns: value (int) - code indicating validitiy of state
             Valid codes:
                 value = 0 -> state is valid but incomplete.
@@ -378,36 +428,26 @@ class DraftState:
         # Check for out of phase submissions
         num_bans = len(self.bans)
         num_picks = len(self.picks)
+        sub_count = num_bans+num_picks
 
-        if(num_bans > DraftState.NUM_BANS):
+        if(num_bans > self.draft_structure.NUM_BANS):
             return DraftState.TOO_MANY_BANS
-        if(num_picks > DraftState.NUM_PICKS):
+        if(num_picks > self.draft_structure.NUM_PICKS):
             return DraftState.TOO_MANY_PICKS
 
-        ban_cutoffs = [DraftState.BAN_PHASE_LENGTHS[0], DraftState.NUM_BANS]
-        pick_cutoffs = [DraftState.PICK_PHASE_LENGTHS[0], DraftState.NUM_PICKS]
-        submission_count = num_bans+num_picks
-        if(0<=submission_count<ban_cutoffs[0]):
-            if num_picks != 0:
-                # Invalid number of picks for ban phase 1
-                return DraftState.INVALID_SUBMISSION
-        if(ban_cutoffs[0]<=submission_count<(ban_cutoffs[0]+pick_cutoffs[0])):
-            if num_bans != ban_cutoffs[0]:
-                # Invalid number of bans for pick phase 1
-                return DraftState.INVALID_SUBMISSION
-        if((ban_cutoffs[0]+pick_cutoffs[0])<=submission_count<(ban_cutoffs[1]+pick_cutoffs[0])):
-            if num_picks != pick_cutoffs[0]:
-                # Invalid number of picks for ban phase 2
-                return DraftState.INVALID_SUBMISSION
-        if((ban_cutoffs[1]+pick_cutoffs[0])<=submission_count<=(ban_cutoffs[1]+pick_cutoffs[1])):
-            if num_bans != ban_cutoffs[1]:
-                # Invalid number of bans for pick phase 2
-                return DraftState.INVALID_SUBMISSION
+        # validation is tuple of form (target_ban_count, target_blue_pick_count, target_red_pick_count)
+        validation = self.draft_structure.submission_dist[sub_count]
+        num_opponent_sub = np.count_nonzero(self.state[:,self.get_position_index(0)])
+        num_ally_sub = num_picks - num_opponent_sub
+        if self.team == DraftState.BLUE_TEAM:
+            dist = (num_bans, num_ally_sub, num_opponent_sub)
+        else:
+            dist = (num_bans, num_opponent_sub, num_ally_sub)
+        if(dist != validation):
+            return DraftState.INVALID_SUBMISSION
 
         # State is valid, check if draft is complete
-        num_enemy_picks = np.sum(self.state[:,0])
-        num_ally_picks = np.sum(self.state[:,2:])
-        if(num_ally_picks == self.num_positions and num_enemy_picks == self.num_positions):
+        if(num_ally_sub == self.num_positions and num_opponent_sub == self.num_positions):
             # Draft is valid and complete. Note that it isn't necessary
             # to have the full number of valid bans to register a complete draft. This is
             # because teams can be forced to forefit bans due to disciplinary factor (rare)
@@ -416,3 +456,45 @@ class DraftState:
 
         # Draft is valid, but not complete
         return 0
+
+if __name__=="__main__":
+    state = DraftState(DraftState.BLUE_TEAM)
+    print(state.evaluate())
+    print(state.num_actions)
+    state.display()
+    actions = state.get_valid_actions()
+    print(actions)
+
+    state.update(1,-1)
+    state.update(2,-1)
+    state.update(3,-1)
+    state.update(4,-1)
+    state.update(5,-1)
+    state.update(6,-1)
+
+    state.update(7,1)
+    state.update(8,0)
+    state.update(9,0)
+
+    new_actions = state.get_valid_actions()
+    print(new_actions)
+    print("")
+    for aid in range(len(new_actions)):
+        if(new_actions[aid]):
+            print(state.format_action(aid))
+
+    state.update(10,2)
+    state.update(11,3)
+    state.update(12,0)
+
+    state.update(13,-1)
+    state.update(14,-1)
+    state.update(15,-1)
+    state.update(16,-1)
+
+    state.update(17,0)
+    state.update(18,5)
+    state.update(19,4)
+
+    state.display()
+    print(state.evaluate())
