@@ -191,6 +191,7 @@ def create_Champion_fixture():
     valid_ids = get_champion_ids()
     champions = []
     model = 'predict.Champion'
+    url_root = "https://ddragon.leagueoflegends.com/cdn/7.10.1/img/champion/"
     for cid in valid_ids:
         champion = {}
         champion["model"] = model
@@ -198,6 +199,7 @@ def create_Champion_fixture():
         fields = {}
         fields["id"] = cid
         fields["display_name"] = champion_name_from_id(cid)
+        fields["image"] = url_root+""
         champion["fields"] = fields
         champions.append(champion)
     with open('champions_fixture.json','w') as outfile:

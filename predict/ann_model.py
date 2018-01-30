@@ -17,7 +17,8 @@ class Model:
         print("Model closed..")
 
     def __del__(self):
-        self.sess.close()
+        if(self.sess):
+            self.sess.close()
         print("Model closed..")
 
     def predict(self, states):

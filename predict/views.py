@@ -14,6 +14,8 @@ from .champion_info import get_champion_ids, champion_name_from_id
 path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
 swain = ann_model.Model(path_to_model)
 
+CHAMPIONS = Champion.objects.order_by('display_name')
+
 def validate_draft(form):
     RED = DraftState.RED_TEAM
     BLUE = DraftState.BLUE_TEAM
@@ -103,7 +105,7 @@ def predict(request):
         if not errors and active_state:
             predictions = swain.predict([active_state])
             predictions = predictions[0,:]
-            
+
             data = [(a,*active_state.format_action(a),predictions[a]) for a in range(len(predictions))]
             data = [(champion_name_from_id(cid),pos_labels[pos],Q) for (a,cid,pos,Q) in data]
             df = pd.DataFrame(data, columns=['cname','pos','Q(s,a)'])
@@ -118,8 +120,11 @@ def predict(request):
     context = {
         "draft_form":form,
         "top_pred":top_predictions,
-        "errors": errors
+        "errors": errors,
+        "champs": CHAMPIONS
     }
+    for champ in Champion.objects.all():
+        print(champ.id)
     context.update(result)
 
     return render(request, 'predict/predict.html', context)
