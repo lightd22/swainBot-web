@@ -1,0 +1,4 @@
+model_checkpoint_path: "model_E30.ckpt"
+all_model_checkpoint_paths: "models/model_E10.ckpt"
+all_model_checkpoint_paths: "models/model_E20.ckpt"
+all_model_checkpoint_paths: "model_E30.ckpt"
