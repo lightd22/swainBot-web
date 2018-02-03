@@ -160,162 +160,165 @@ fieldset{
 			</h3>
 		</div>
 
-		<form action="{% url 'predict:predict' %}" method="GET" id="draft_form">
-			<div class='row'>
-				<div class='col-sm-4'>
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_blue_ban_0"> Ban 0 </label>
-							{{draft_form.blue_ban_0}}
-						</div>
+		<div class='container-fluid'>
+			<form action="{% url 'predict:predict' %}" method="GET" id="draft_form">
+				<div class='row'>
+					<div class='col-sm-4'>
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_blue_ban_0"> Ban 0 </label>
+								{{draft_form.blue_ban_0}}
+							</div>
 
-						<div class='form-group'>
-							<label for="id_blue_ban_1"> Ban 1 </label>
-							{{draft_form.blue_ban_1}}
-						</div>
+							<div class='form-group'>
+								<label for="id_blue_ban_1"> Ban 1 </label>
+								{{draft_form.blue_ban_1}}
+							</div>
 
-						<div class='form-group'>
-							<label for="id_blue_ban_2"> Ban 2 </label>
-							{{draft_form.blue_ban_2}}
-						</div>
-					</fieldset>
+							<div class='form-group'>
+								<label for="id_blue_ban_2"> Ban 2 </label>
+								{{draft_form.blue_ban_2}}
+							</div>
+						</fieldset>
 
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_blue_pick_0"> Pick 0 </label>
-							{{draft_form.blue_pick_0}} {{draft_form.blue_pos_0}}
-						</div>
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_blue_pick_0"> Pick 0 </label>
+								{{draft_form.blue_pick_0}} {{draft_form.blue_pos_0}}
+							</div>
 
-						<div class='form-group'>
-							<label for="id_blue_pick_1"> Pick 1 </label>
-							{{draft_form.blue_pick_1}} {{draft_form.blue_pos_1}}
-						</div>
+							<div class='form-group'>
+								<label for="id_blue_pick_1"> Pick 1 </label>
+								{{draft_form.blue_pick_1}} {{draft_form.blue_pos_1}}
+							</div>
 
-						<div class='form-group'>
-							<label for="id_blue_pick_2"> Pick 2 </label>
-							{{draft_form.blue_pick_2}} {{draft_form.blue_pos_2}}
-						</div>
-					</fieldset>
+							<div class='form-group'>
+								<label for="id_blue_pick_2"> Pick 2 </label>
+								{{draft_form.blue_pick_2}} {{draft_form.blue_pos_2}}
+							</div>
+						</fieldset>
 
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_blue_ban_3"> Ban 3 </label>
-							{{draft_form.blue_ban_3}}
-						</div>
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_blue_ban_3"> Ban 3 </label>
+								{{draft_form.blue_ban_3}}
+							</div>
 
-						<div class='form-group'>
-							<label for="id_blue_ban_4"> Ban 4 </label>
-							{{draft_form.blue_ban_4}}
-						</div>
-					</fieldset>
+							<div class='form-group'>
+								<label for="id_blue_ban_4"> Ban 4 </label>
+								{{draft_form.blue_ban_4}}
+							</div>
+						</fieldset>
 
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_blue_pick_3"> Pick 3 </label>
-							{{draft_form.blue_pick_3}} {{draft_form.blue_pos_3}}
-						</div>
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_blue_pick_3"> Pick 3 </label>
+								{{draft_form.blue_pick_3}} {{draft_form.blue_pos_3}}
+							</div>
 
-						<div class='form-group'>
-							<label for="id_blue_pick_4"> Pick 4 </label>
-							{{draft_form.blue_pick_4}} {{draft_form.blue_pos_4}}
-						</div>
-					</fieldset>
+							<div class='form-group'>
+								<label for="id_blue_pick_4"> Pick 4 </label>
+								{{draft_form.blue_pick_4}} {{draft_form.blue_pos_4}}
+							</div>
+						</fieldset>
+					</div>
+
+					<div class='col-sm-4'>
+						{% if errors %}
+							{% for err_field,err_msg in errors.items %}
+								<h3 id="error">ERROR IN: {{err_field}}->{{err_msg}}</h3>
+							{% endfor %}
+						{% endif %}
+
+						<h3>{{swain_says}}</h3>
+
+						<table class="table results" id="results">
+							<tr class="">
+								<th>Rank</th>
+								<th>Name</th>
+								<th>Position</th>
+								<th>Score</th>
+							</tr>
+							{% for pick in top_pred %}
+							<tr class="result_row">
+								<td>{{pick.0}}</td>
+								<td>{{pick.1}}</td>
+								<td>{{pick.2}}</td>
+								<td>{{pick.3}}</td>
+							</tr>
+							{% endfor %}
+						</table>
+					</div>
+
+					<div class='col-sm-4'>
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_red_ban_0"> Ban 0 </label>
+								{{draft_form.red_ban_0}}
+							</div>
+
+							<div class='form-group'>
+								<label for="id_red_ban_1"> Ban 1 </label>
+								{{draft_form.red_ban_1}}
+							</div>
+
+							<div class='form-group'>
+								<label for="id_red_ban_2"> Ban 2 </label>
+								{{draft_form.red_ban_2}}
+							</div>
+						</fieldset>
+
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_red_pick_0"> Pick 0 </label>
+								{{draft_form.red_pick_0}} {{draft_form.red_pos_0}}
+							</div>
+
+							<div class='form-group'>
+								<label for="id_red_pick_1"> Pick 1 </label>
+								{{draft_form.red_pick_1}} {{draft_form.red_pos_1}}
+							</div>
+
+							<div class='form-group'>
+								<label for="id_red_pick_2"> Pick 2 </label>
+								{{draft_form.red_pick_2}} {{draft_form.red_pos_2}}
+							</div>
+						</fieldset>
+
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_red_ban_3"> Ban 3 </label>
+								{{draft_form.red_ban_3}}
+							</div>
+
+							<div class='form-group'>
+								<label for="id_red_ban_4"> Ban 4 </label>
+								{{draft_form.red_ban_4}}
+							</div>
+						</fieldset>
+
+						<fieldset>
+							<div class='form-group'>
+								<label for="id_red_pick_3"> Pick 3 </label>
+								{{draft_form.red_pick_3}} {{draft_form.red_pos_3}}
+							</div>
+
+							<div class='form-group'>
+								<label for="id_red_pick_4"> Pick 4 </label>
+								{{draft_form.red_pick_4}} {{draft_form.red_pos_4}}
+							</div>
+						</fieldset>
+					</div>
 				</div>
-
-				<div class='col-sm-4'>
-					{% if errors %}
-						{% for err_field,err_msg in errors.items %}
-							<h3 id="error">ERROR IN: {{err_field}}->{{err_msg}}</h3>
-						{% endfor %}
-					{% endif %}
-
-					<h3>{{swain_says}}</h3>
-
-					<table class="table results" id="results">
-						<tr class="">
-							<th>Rank</th>
-							<th>Name</th>
-							<th>Position</th>
-							<th>Score</th>
-						</tr>
-						{% for pick in top_pred %}
-						<tr class="result_row">
-							<td>{{pick.0}}</td>
-							<td>{{pick.1}}</td>
-							<td>{{pick.2}}</td>
-							<td>{{pick.3}}</td>
-						</tr>
-						{% endfor %}
-					</table>
+				<div class='row'>
+					<div class='col-sm-12'>
+						<input type="submit" class="predict-button" value="PREDICT" form="draft_form">
+						<input type="reset" class="predict-button" value="RESET" form="draft_form">
+					</div>
 				</div>
+			</form>
+		</div>
 
-				<div class='col-sm-4'>
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_red_ban_0"> Ban 0 </label>
-							{{draft_form.red_ban_0}}
-						</div>
-
-						<div class='form-group'>
-							<label for="id_red_ban_1"> Ban 1 </label>
-							{{draft_form.red_ban_1}}
-						</div>
-
-						<div class='form-group'>
-							<label for="id_red_ban_2"> Ban 2 </label>
-							{{draft_form.red_ban_2}}
-						</div>
-					</fieldset>
-
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_red_pick_0"> Pick 0 </label>
-							{{draft_form.red_pick_0}} {{draft_form.red_pos_0}}
-						</div>
-
-						<div class='form-group'>
-							<label for="id_red_pick_1"> Pick 1 </label>
-							{{draft_form.red_pick_1}} {{draft_form.red_pos_1}}
-						</div>
-
-						<div class='form-group'>
-							<label for="id_red_pick_2"> Pick 2 </label>
-							{{draft_form.red_pick_2}} {{draft_form.red_pos_2}}
-						</div>
-					</fieldset>
-
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_red_ban_3"> Ban 3 </label>
-							{{draft_form.red_ban_3}}
-						</div>
-
-						<div class='form-group'>
-							<label for="id_red_ban_4"> Ban 4 </label>
-							{{draft_form.red_ban_4}}
-						</div>
-					</fieldset>
-
-					<fieldset>
-						<div class='form-group'>
-							<label for="id_red_pick_3"> Pick 3 </label>
-							{{draft_form.red_pick_3}} {{draft_form.red_pos_3}}
-						</div>
-
-						<div class='form-group'>
-							<label for="id_red_pick_4"> Pick 4 </label>
-							{{draft_form.red_pick_4}} {{draft_form.red_pos_4}}
-						</div>
-					</fieldset>
-				</div>
-			</div>
-			<div class='row'>
-				<div class='col-sm-12'>
-					<input type="submit" class="predict-button" value="PREDICT" form="draft_form">
-					<input type="reset" class="predict-button" value="RESET" form="draft_form">
-				</div>
-			</div>
-		</form>
 
 	</body>
 </html>
