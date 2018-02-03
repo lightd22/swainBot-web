@@ -85,7 +85,7 @@ def validate_draft(form):
         "active_state":active_state,
         "draft":draft,
         "bb1e": "id=error",
-        "swain_says": "SWAIN SAYS THE NEXT BEST PICKS FOR {} TEAM ARE...".format(active_team).upper(),
+        "swain_says": "SWAIN'S SUGGESTIONS FOR {} TEAM ARE...".format(active_team).upper(),
     }
 
     return validation

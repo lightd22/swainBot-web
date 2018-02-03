@@ -1,10 +1,12 @@
-import numpy as np
 #from cassiopeia import riotapi
+#from myRiotApiKey import api_key
 from .riotapi import make_request, api_versions
+import numpy as np
 import requests
 import re
 import json
 import os
+
 
 # Box is a vacant class with no initial members. This will be used to hold the champion_id list and champion_id <-> name dictionaries.
 
@@ -164,7 +166,7 @@ def populate_champion_dictionary():
     #riotapi.set_region("NA")
     #riotapi.set_api_key(api_key)
     #champions = riotapi.get_champions()
-    DISABLED_CHAMPIONS = ["Ornn"]
+    DISABLED_CHAMPIONS = []
     if(look_local):
         with open(os.path.dirname(os.path.abspath(__file__))+'/champions.json', encoding='utf-8') as local_data:
             response = json.load(local_data)
@@ -191,7 +193,6 @@ def create_Champion_fixture():
     valid_ids = get_champion_ids()
     champions = []
     model = 'predict.Champion'
-    url_root = "https://ddragon.leagueoflegends.com/cdn/7.10.1/img/champion/"
     for cid in valid_ids:
         champion = {}
         champion["model"] = model
@@ -199,7 +200,6 @@ def create_Champion_fixture():
         fields = {}
         fields["id"] = cid
         fields["display_name"] = champion_name_from_id(cid)
-        fields["image"] = url_root+""
         champion["fields"] = fields
         champions.append(champion)
     with open('champions_fixture.json','w') as outfile:

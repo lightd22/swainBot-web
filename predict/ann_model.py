@@ -14,12 +14,16 @@ class Model:
         self._primary_input = tf.get_default_graph().get_tensor_by_name("online/inputs:0")
         self._valid_actions = tf.get_default_graph().get_tensor_by_name("online/valid_actions:0")
         #self._train = tf.get_default_graph().get_tensor_by_name("online/update")
-        print("Model closed..")
+        print("Model opened..")
 
     def __del__(self):
-        if(self.sess):
+        try:
             self.sess.close()
-        print("Model closed..")
+            del self.sess
+        except TypeError:
+            print("Cannot close model!")
+        finally:
+            print("Model closed..")
 
     def predict(self, states):
         """
