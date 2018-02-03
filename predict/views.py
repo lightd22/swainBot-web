@@ -11,7 +11,7 @@ from .draftstate import DraftState
 from .champion_info import get_champion_ids, champion_name_from_id
 # Create your views here.
 
-path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
+path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/spring_2018/model"
 swain = ann_model.Model(path_to_model)
 
 CHAMPIONS = Champion.objects.order_by('display_name')
@@ -112,8 +112,8 @@ def predict(request):
             df.sort_values('Q(s,a)',ascending=False,inplace=True)
             df.reset_index(drop=True,inplace=True)
             df['rank'] = df.index+1
-
-            top_predictions = df[['rank','cname','pos','Q(s,a)']].round({'Q(s,a)':4}).head().values.tolist()
+            df = df[df['Q(s,a)'] > -np.inf]
+            top_predictions = df[['rank','cname','pos','Q(s,a)']].round({'Q(s,a)':4}).head(10).values.tolist()
         else:
             top_predictions = []
 
@@ -123,8 +123,6 @@ def predict(request):
         "errors": errors,
         "champs": CHAMPIONS
     }
-    for champ in Champion.objects.all():
-        print(champ.id)
     context.update(result)
 
     return render(request, 'predict/predict.html', context)

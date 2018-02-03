@@ -1,4 +1,4 @@
-{% load static %}
+c	{% load static %}
 <!DOCTYPE html>
 <html>
 
@@ -67,6 +67,8 @@
 			box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24), 0 17px 50px 0 rgba(0, 0, 0, 0.19);
 		}
 
+		.active{background-color: #4f4f4f;}
+
 		.results_section {
 			padding-left: 1em;
 		}
@@ -84,7 +86,7 @@
 
 		.results tr:nth-child(even){background-color: #7c7c7c;}
 
-		.results tr:hover {background-color: #4f4f4f;}
+		.results tr:hover{background-color: #4f4f4f;}
 
 		.results th {
     padding-top: 12px;
@@ -122,16 +124,25 @@
 			border-width: 10px;
 			border-color: red;
 		}
+
+		.btn {
+    border: none;
+    outline: none;
+    padding: 10px 16px;
+    background-color: #f1f1f1;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Style the active class, and buttons on mouse-over */
+.btn:hover {
+    background-color: #666;
+    color: white;
+}
 	</style>
 
 	<body>
 
-		<datalist id="champions">
-			<option value="">
-				{% for champion in champions %}
-					<option value="{{ champion.display_name }}">
-				{% endfor %}
-		</datalist>
 		<h3 id="error">
 			{{critical_error}}
 		</h3>
@@ -230,7 +241,7 @@
 			<input type="reset" class="predict-button" value="RESET" form="draft_form">
 		</form>
 
-		<div class="results_section">
+		<div class="results_section" id="results_div">
 			{% if errors %}
 				{% for err_field,err_msg in errors.items %}
 					<h3 id="error">ERROR IN: {{err_field}}->{{err_msg}}</h3>
@@ -239,15 +250,15 @@
 
 			<h3>{{swain_says}}</h3>
 			<p></p>
-			<table class="results">
-				<tr>
+			<table class="results" id="results">
+				<tr class="">
 					<th>Rank</th>
 					<th>Name</th>
 					<th>Position</th>
 					<th>Score</th>
 				</tr>
 				{% for pick in top_pred %}
-				<tr>
+				<tr class="result_row">
 					<td>{{pick.0}}</td>
 					<td>{{pick.1}}</td>
 					<td>{{pick.2}}</td>
