@@ -16,11 +16,11 @@ class DraftForm(forms.Form):
                             (5,"SUP")]
 
         CHAMPIONS = Champion.objects.order_by('display_name')
-
         CHAMPION_CHOICES = []
         for champion in CHAMPIONS:
             CHAMPION_CHOICES.append((champion.id, champion.display_name))
 
+        print(Champion.objects.fiter(display_name='Zoe'))
         PICK_CHOICES = [("","")]+CHAMPION_CHOICES
         NO_BAN = -1
         BAN_CHOICES = [("",""),(NO_BAN,"No Ban")]+CHAMPION_CHOICES

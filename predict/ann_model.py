@@ -20,8 +20,8 @@ class Model:
         try:
             self.sess.close()
             del self.sess
-        except TypeError:
-            print("Cannot close model!")
+#        except TypeError:
+#            print("Cannot close model!")
         finally:
             print("Model closed..")
 
