@@ -11,7 +11,7 @@ from .draftstate import DraftState
 from .champion_info import get_champion_ids, champion_name_from_id
 # Create your views here.
 
-path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/spring_2018/model"
+path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
 swain = ann_model.Model(path_to_model)
 
 CHAMPIONS = Champion.objects.order_by('display_name')
