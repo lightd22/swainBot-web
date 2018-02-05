@@ -235,22 +235,24 @@ fieldset{
 
 							<h3>{{swain_says}}</h3>
 
-							<table class="table results" id="results">
-								<tr class="">
-									<th>Rank</th>
-									<th>Name</th>
-									<th>Position</th>
-									<th>Score</th>
-								</tr>
-								{% for pick in top_pred %}
-								<tr class="result_row">
-									<td>{{pick.0}}</td>
-									<td>{{pick.1}}</td>
-									<td>{{pick.2}}</td>
-									<td>{{pick.3}}</td>
-								</tr>
-								{% endfor %}
-							</table>
+							{% if top_pred %}
+								<table class="table results" id="results">
+									<tr class="">
+										<th>Rank</th>
+										<th>Name</th>
+										<th>Position</th>
+										<th>Score</th>
+									</tr>
+									{% for pick in top_pred %}
+									<tr class="result_row">
+										<td>{{pick.0}}</td>
+										<td>{{pick.1}}</td>
+										<td>{{pick.2}}</td>
+										<td>{{pick.3}}</td>
+									</tr>
+									{% endfor %}
+								</table>
+							{% endif %}
 						</div>
 					</div>
 

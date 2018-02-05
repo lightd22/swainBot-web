@@ -76,16 +76,19 @@ def validate_draft(form):
         # If draft is complete (no picks remaining), set active team to None
         active_team = None
         active_state = None
+        swain_says = "DRAFT COMPLETE"
     else:
         (active_team,_,_) = SUBMISSION_ORDER[submission_id+1].split("_")
         active_state = states[active_team]
+        swain_says = "SWAIN'S SUGGESTIONS FOR {} TEAM ARE...".format(active_team).upper()
+
 
     validation = {
         "errors":errors,
         "active_state":active_state,
         "draft":draft,
         "bb1e": "id=error",
-        "swain_says": "SWAIN'S SUGGESTIONS FOR {} TEAM ARE...".format(active_team).upper(),
+        "swain_says": swain_says,
     }
 
     return validation
