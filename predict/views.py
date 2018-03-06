@@ -3,16 +3,20 @@ from django.core.exceptions import ValidationError
 import os
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 from .models import Champion, Position
 from .forms import DraftForm
-from . import ann_model
+from .inference_models.inference_model import QNetInferenceModel, SoftmaxInferenceModel
 from .draftstate import DraftState
 from .champion_info import get_champion_ids, champion_name_from_id
 # Create your views here.
 
-path_to_model = os.path.dirname(os.path.abspath(__file__))+"/models/model"
-swain = ann_model.Model(path_to_model)
+#path_to_model = os.path.dirname(os.path.abspath(__file__))+"/inference_models/spring_2018/week_7/ddqn_model_E{}".format(45)
+path_to_model = os.path.dirname(os.path.abspath(__file__))+"/inference_models/ddqn_model"
+swain = QNetInferenceModel("ddqn", path_to_model)
+#path_to_model = os.path.dirname(os.path.abspath(__file__))+"/inference_models/spring_2018/week_7/softmax_model_E{}".format(45)
+#swain_soft = SoftmaxInferenceModel("softmax", path_to_model)
 
 CHAMPIONS = Champion.objects.order_by('display_name')
 
@@ -117,12 +121,26 @@ def predict(request):
             df['rank'] = df.index+1
             df = df[df['Q(s,a)'] > -np.inf]
             top_predictions = df[['rank','cname','pos','Q(s,a)']].round({'Q(s,a)':4}).head(10).values.tolist()
+
+#            predictions_soft = swain_soft.predict([active_state])
+#            predictions_soft = predictions_soft[0,:]
+
+#            data = [(a,*active_state.format_action(a),predictions_soft[a]) for a in range(len(predictions_soft))]
+#            data = [(champion_name_from_id(cid),pos_labels[pos],Q) for (a,cid,pos,Q) in data]
+#            df = pd.DataFrame(data, columns=['cname','pos','prob'])
+#            df.sort_values('prob',ascending=False,inplace=True)
+#            df.reset_index(drop=True,inplace=True)
+#            df['rank'] = df.index+1
+#            df = df[df['prob'] > -np.inf]
+#            soft_top = df[['rank','cname','pos','prob']].round({'prob':4}).head(10).values.tolist()
         else:
             top_predictions = []
+            soft_top = []
 
     context = {
         "draft_form":form,
         "top_pred":top_predictions,
+        "soft_top":None,#soft_top,
         "errors": errors,
         "champs": CHAMPIONS
     }

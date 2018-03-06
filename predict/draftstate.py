@@ -309,7 +309,7 @@ class DraftState:
         # Submitted picks of the form (champ_id, pos) correspond with the selection champion = champion_id in position = pos.
         # Bans are given pos = -1 and enemy picks pos = 0. However, this is not how they are stored in the state array.
         # Finally this doesn't match indexing used for state array and action vector indexing (which follow state indexing).
-        if((position < -1) or (position > self.num_positions) or (not valid_champion_id(champion_id))):
+        if((position is None) or (position < -1) or (position > self.num_positions) or (not valid_champion_id(champion_id))):
             return False
 
         index = self.champ_id_to_state_index[champion_id]

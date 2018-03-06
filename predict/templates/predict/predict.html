@@ -253,6 +253,26 @@ fieldset{
 									{% endfor %}
 								</table>
 							{% endif %}
+
+							{% if soft_top %}
+								<table class="table results" id="results2">
+									<tr class="">
+										<th>Rank</th>
+										<th>Name</th>
+										<th>Position</th>
+										<th>Score</th>
+									</tr>
+									{% for pick in soft_top %}
+									<tr class="result_row">
+										<td>{{pick.0}}</td>
+										<td>{{pick.1}}</td>
+										<td>{{pick.2}}</td>
+										<td>{{pick.3}}</td>
+									</tr>
+									{% endfor %}
+								</table>
+							{% endif %}
+							
 						</div>
 					</div>
 
