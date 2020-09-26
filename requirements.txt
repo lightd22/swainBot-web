@@ -1,7 +1,7 @@
 numpy==1.13.3
 matplotlib==1.5.3
 tensorflow==1.15.4
-requests==2.11.1
+requests==2.20.0
 pandas==0.18.1
 Django>=1.11.15
 gunicorn==19.7.1
